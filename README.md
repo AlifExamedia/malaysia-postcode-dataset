@@ -87,12 +87,57 @@ SELECT id, state, city, postcode FROM postcodes WHERE active = TRUE;
 
 > **Note:** The `id` numbers are created by your own database. Your `id` for a postcode may be different from someone else's. Do not copy `id` numbers between different databases.
 
+**Linked tables (states, cities, postcodes)**
+
+If you want separate tables that are linked together, add `--linked`:
+
+```bash
+python3 scripts/export.py sql --linked
+```
+
+This creates three tables:
+
+| Table | Columns | Linked to |
+| --- | --- | --- |
+| `states` | `id`, `name`, `active` | |
+| `cities` | `id`, `state_id`, `name`, `active` | `state_id` → `states.id` |
+| `postcodes` | `id`, `state_id`, `city_id`, `postcode`, `active` | `state_id` → `states.id`, `city_id` → `cities.id` |
+
+Each city belongs to a state. Each postcode belongs to a city and also to a state, so you can link a postcode straight to its state. The import always fills in `state_id` and `city_id` together, so they always agree.
+
+Show each postcode with its city and state:
+
+```sql
+SELECT p.id, p.postcode, c.name AS city, s.name AS state
+FROM postcodes p
+JOIN cities c ON c.id = p.city_id
+JOIN states s ON s.id = p.state_id
+WHERE p.active = TRUE;
+```
+
+Show all postcodes in one state:
+
+```sql
+SELECT p.postcode
+FROM postcodes p
+JOIN states s ON s.id = p.state_id
+WHERE s.name = 'Johor' AND p.active = TRUE;
+```
+
+> **Note:** If you change these tables by hand, make sure `state_id` on a postcode is the same as the `state_id` of its city.
+
+The update rules are the same as above: `id` numbers never change, new rows get new `id` numbers, and removed rows stay with `active = FALSE`.
+
+If you already have tables with these names, use `--prefix` to change them. For example, `--prefix my_` creates `my_states`, `my_cities` and `my_postcodes`.
+
 **More options**
 
 | Option | What it does | Example |
 | --- | --- | --- |
 | `--state` | Export only some states | `--state johor selangor` |
 | `--table` | Use a different table name | `--table my_postcodes` |
+| `--linked` | Create three linked tables instead of one | `--linked` |
+| `--prefix` | With `--linked`, add text before each table name | `--prefix my_` |
 | `--output` | Save to a different file | `--output exports/postcodes.csv` |
 
 The state names are the file names in `data/states/`, without `.json`.
