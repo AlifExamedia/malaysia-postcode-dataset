@@ -33,6 +33,23 @@ Each file looks like this:
 
 You only need **Python 3.10 or newer**. No extra packages are needed.
 
+## Scripts
+
+There are two scripts in the `scripts/` folder:
+
+| Script | What it does |
+| --- | --- |
+| `build.py` | Downloads the latest postcode list from data.gov.my, cleans it, and saves one JSON file per state in `data/states/`. |
+| `export.py` | Reads the JSON files in `data/states/` and turns them into a CSV file or an SQL file for your database. |
+
+They work in this order:
+
+```
+data.gov.my  →  build.py  →  data/states/*.json  →  export.py  →  postcodes.csv / postcodes.sql
+```
+
+The JSON files are already included in this repository. If you only want CSV or SQL, you can just run `export.py`. Run `build.py` only when you want the newest data from data.gov.my (see [Keep your data up to date](#keep-your-data-up-to-date)).
+
 ## Convert to CSV or SQL
 
 Use `scripts/export.py` to turn the JSON files into one CSV or SQL file. Each row has three columns: `state`, `city` and `postcode`.
